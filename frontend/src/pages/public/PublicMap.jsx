@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Plus, Bus, Ambulance, X, MapPin, Navigation, Loader2 } from 'lucide-react';
+import { Plus, Bus, Ambulance, X, MapPin, Navigation, Loader2, RefreshCw } from 'lucide-react';
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -27,16 +27,16 @@ const CENTER = { lat: 21.6300, lng: 85.5800 };
 
 const PublicMap = () => {
   const navigate = useNavigate();
-  const { user, token } = useAuth();
+  const { user, token, logout } = useAuth();
   const [showServicePopup, setShowServicePopup] = useState(false);
   const [showAmbulancePopup, setShowAmbulancePopup] = useState(false);
-  const [showBusInfo, setShowBusInfo] = useState(false);
   const [buses, setBuses] = useState([]);
+  const [statusMessage, setStatusMessage] = useState('');
   const [allOutOfStation, setAllOutOfStation] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
   const [selectedBus, setSelectedBus] = useState(null);
   const [etaInfo, setEtaInfo] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [bookingForm, setBookingForm] = useState({
     student_registration_id: '',
     phone: '',
@@ -47,36 +47,45 @@ const PublicMap = () => {
 
   useEffect(() => {
     fetchBuses();
+    // Try to get user location in background (don't block UI)
+    tryGetLocation();
     const interval = setInterval(fetchBuses, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  const tryGetLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        },
+        (err) => {
+          console.log('Location not available, using default center');
+          setUserLocation(CENTER); // Use default location
+        },
+        { timeout: 5000 }
+      );
+    } else {
+      setUserLocation(CENTER);
+    }
+  };
 
   const fetchBuses = async () => {
     try {
       const response = await publicApi.getBuses();
       setBuses(response.data.buses || []);
       setAllOutOfStation(response.data.all_out_of_station || false);
+      setStatusMessage(response.data.message || '');
     } catch (error) {
       console.error('Failed to fetch buses:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleOpenService = () => {
-    // Check location permission
-    if (!navigator.geolocation) {
-      toast.error('Geolocation is not supported');
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setShowServicePopup(true);
-      },
-      (err) => {
-        toast.error('Please enable location services to use this feature');
-      }
-    );
+    // Open popup directly without requiring location first
+    setShowServicePopup(true);
   };
 
   const handleSelectBus = async () => {
@@ -88,21 +97,28 @@ const PublicMap = () => {
     }
 
     if (buses.length === 0) {
-      toast.info('No active buses at the moment');
+      toast.info(statusMessage || 'No active buses at the moment');
       return;
     }
 
-    setShowBusInfo(true);
+    // Select first bus
+    setSelectedBus(buses[0]);
 
-    // Calculate ETA for the nearest bus
+    // Calculate ETA if we have user location
     if (buses[0] && userLocation) {
       try {
         const response = await publicApi.getBusETA(buses[0].vehicle_id, userLocation.lat, userLocation.lng);
         setEtaInfo(response.data);
-        setSelectedBus(buses[0]);
+        if (response.data.eta_minutes) {
+          toast.success(`Nearest Bus ETA: ${response.data.eta_minutes} minutes`);
+        } else {
+          toast.info('Bus location not yet available');
+        }
       } catch (error) {
         console.error('Failed to get ETA:', error);
       }
+    } else {
+      toast.info(`Bus ${buses[0].vehicle_number} is active`);
     }
   };
 
@@ -129,16 +145,14 @@ const PublicMap = () => {
       return;
     }
 
-    if (!userLocation) {
-      toast.error('Location required');
-      return;
-    }
+    // Use user location or default center
+    const location = userLocation || CENTER;
 
     setLoading(true);
     try {
       const response = await axios.post(`${API_URL}/api/public/ambulance/book`, {
         ...bookingForm,
-        user_location: userLocation
+        user_location: location
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -153,12 +167,29 @@ const PublicMap = () => {
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    toast.success('Logged out');
+  };
+
   return (
     <div className="min-h-screen bg-background relative" data-testid="public-map">
       {/* Header */}
-      <div className="bg-sky-500 text-white p-4 text-center">
-        <h1 className="font-heading font-bold text-xl">College Transport System</h1>
-        <p className="text-sm text-white/80">GCE Campus</p>
+      <div className="bg-sky-500 text-white p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-heading font-bold text-xl">College Transport System</h1>
+            <p className="text-sm text-white/80">GCE Campus</p>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            className="text-white hover:bg-sky-600"
+            onClick={fetchBuses}
+          >
+            <RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
       </div>
 
       {/* Map Area */}
@@ -174,41 +205,60 @@ const PublicMap = () => {
         <div className="relative h-full flex flex-col items-center justify-center p-4">
           {/* User Location Marker */}
           {userLocation && (
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
               <div className="w-4 h-4 bg-blue-500 rounded-full animate-ping absolute" />
               <div className="w-4 h-4 bg-blue-500 rounded-full relative z-10" />
+              <p className="text-xs text-white mt-1 text-center">You</p>
             </div>
           )}
 
-          {/* Bus Markers */}
-          {buses.map((bus, index) => (
-            <div 
-              key={bus.vehicle_id}
-              className="absolute cursor-pointer"
-              style={{ 
-                top: `${30 + index * 15}%`, 
-                left: `${40 + index * 10}%`,
-              }}
-              onClick={() => setSelectedBus(bus)}
-            >
-              <div className="p-2 bg-sky-500/20 rounded-full border-2 border-sky-500 animate-pulse">
-                <Bus className="h-6 w-6 text-sky-500" />
-              </div>
-              <p className="text-xs text-center mt-1 text-white font-mono">{bus.vehicle_number}</p>
-            </div>
-          ))}
-
-          {/* No buses message */}
-          {buses.length === 0 && !allOutOfStation && (
+          {/* Bus Status Display */}
+          {loading ? (
             <div className="text-center">
-              <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-              <p className="text-muted-foreground">No active buses</p>
+              <Loader2 className="h-12 w-12 text-sky-500 mx-auto animate-spin mb-2" />
+              <p className="text-muted-foreground">Loading bus status...</p>
             </div>
-          )}
-
-          {allOutOfStation && (
-            <div className="text-center bg-yellow-500/20 p-4 rounded-lg border border-yellow-500/30">
-              <p className="text-yellow-500 font-medium">All buses are out of station</p>
+          ) : buses.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md">
+              {buses.map((bus, index) => (
+                <div 
+                  key={bus.vehicle_id}
+                  className={`p-4 rounded-lg cursor-pointer transition-all ${
+                    selectedBus?.vehicle_id === bus.vehicle_id 
+                      ? 'bg-sky-500/30 border-2 border-sky-500' 
+                      : 'bg-card/80 border border-border hover:border-sky-500/50'
+                  }`}
+                  onClick={() => setSelectedBus(bus)}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-sky-500/20 rounded-full">
+                      <Bus className="h-6 w-6 text-sky-500" />
+                    </div>
+                    <div>
+                      <p className="font-mono font-bold text-foreground">{bus.vehicle_number}</p>
+                      <p className="text-xs text-muted-foreground">{bus.driver_name}</p>
+                      {bus.location?.speed && (
+                        <p className="text-xs text-sky-500">{bus.location.speed} km/h</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center p-6 rounded-lg bg-card/50 border border-border">
+              {allOutOfStation ? (
+                <>
+                  <Bus className="h-12 w-12 text-yellow-500 mx-auto mb-2" />
+                  <p className="text-yellow-500 font-medium">All buses are out of station</p>
+                </>
+              ) : (
+                <>
+                  <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-muted-foreground">{statusMessage || 'No active buses'}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Check back later</p>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -220,11 +270,11 @@ const PublicMap = () => {
               <div>
                 <p className="font-mono font-bold text-sky-500">{selectedBus.vehicle_number}</p>
                 <p className="text-sm text-muted-foreground">{selectedBus.driver_name}</p>
-                {etaInfo && (
-                  <p className="text-green-500 font-mono mt-1">ETA: {etaInfo.eta_minutes} min</p>
+                {etaInfo?.eta_minutes && (
+                  <p className="text-green-500 font-mono mt-1">ETA: {etaInfo.eta_minutes} min ({etaInfo.distance_km} km)</p>
                 )}
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setSelectedBus(null)}>
+              <Button variant="ghost" size="icon" onClick={() => { setSelectedBus(null); setEtaInfo(null); }}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -238,7 +288,7 @@ const PublicMap = () => {
               <Ambulance className="h-5 w-5 text-red-500" />
               <span className="font-medium text-red-500">Ambulance Booked</span>
             </div>
-            <p className="text-sm text-foreground">Status: {activeBooking.status}</p>
+            <p className="text-sm text-foreground">Status: <span className="capitalize">{activeBooking.status}</span></p>
             {activeBooking.otp && (
               <p className="text-lg font-mono text-green-500 mt-2">Your OTP: {activeBooking.otp}</p>
             )}
@@ -250,16 +300,18 @@ const PublicMap = () => {
       </div>
 
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur border-t border-border">
-        <div className="flex justify-center gap-4">
-          {!user && (
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/90 backdrop-blur border-t border-border">
+        <div className="flex justify-center gap-4 items-center">
+          {!user ? (
             <>
-              <Button variant="outline" onClick={() => navigate('/login')}>Login</Button>
-              <Button variant="outline" onClick={() => navigate('/signup')}>Sign Up</Button>
+              <Button variant="outline" onClick={() => navigate('/login')} data-testid="login-btn">Login</Button>
+              <Button variant="outline" onClick={() => navigate('/signup')} data-testid="signup-btn">Sign Up</Button>
             </>
-          )}
-          {user && (
-            <p className="text-sm text-muted-foreground">Welcome, {user.name}</p>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground">Welcome, {user.name}</p>
+              <Button variant="ghost" size="sm" onClick={handleLogout}>Logout</Button>
+            </>
           )}
         </div>
       </div>
@@ -267,7 +319,7 @@ const PublicMap = () => {
       {/* Floating + Button */}
       <button
         onClick={handleOpenService}
-        className="fixed bottom-24 right-6 w-14 h-14 rounded-full bg-sky-500 text-white text-3xl font-bold shadow-lg hover:bg-sky-600 transition-all active:scale-95 flex items-center justify-center"
+        className="fixed bottom-24 right-6 w-14 h-14 rounded-full bg-sky-500 text-white text-3xl font-bold shadow-lg hover:bg-sky-600 transition-all active:scale-95 flex items-center justify-center z-20"
         data-testid="add-service-btn"
       >
         <Plus className="h-8 w-8" />
@@ -286,7 +338,7 @@ const PublicMap = () => {
               data-testid="select-bus-btn"
             >
               <Bus className="h-6 w-6 mr-3" />
-              Bus
+              Bus ({buses.length} active)
             </Button>
             <Button 
               onClick={handleSelectAmbulance}
