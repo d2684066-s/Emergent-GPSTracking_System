@@ -1,52 +1,93 @@
-import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "sonner";
+import { useEffect, useState } from "react";
 import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+// Pages
+import Login from "@/pages/Login";
+import Dashboard from "@/pages/Dashboard";
+import Vehicles from "@/pages/Vehicles";
+import Students from "@/pages/Students";
+import Drivers from "@/pages/Drivers";
+import Offences from "@/pages/Offences";
+import RFIDDevices from "@/pages/RFIDDevices";
+import Trips from "@/pages/Trips";
+import Bookings from "@/pages/Bookings";
+import MapView from "@/pages/MapView";
 
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
+// Layout
+import SidebarLayout from "@/components/SidebarLayout";
 
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
+// Auth context
+import { AuthProvider, useAuth } from "@/context/AuthContext";
 
+const ProtectedRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+  
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  return children;
+};
+
+const AppRoutes = () => {
+  const { user } = useAuth();
+  
   return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
+    <Routes>
+      <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <SidebarLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Dashboard />} />
+        <Route path="vehicles" element={<Vehicles />} />
+        <Route path="students" element={<Students />} />
+        <Route path="drivers" element={<Drivers />} />
+        <Route path="offences" element={<Offences />} />
+        <Route path="rfid-devices" element={<RFIDDevices />} />
+        <Route path="trips" element={<Trips />} />
+        <Route path="bookings" element={<Bookings />} />
+        <Route path="map" element={<MapView />} />
+      </Route>
+    </Routes>
   );
 };
 
 function App() {
+  useEffect(() => {
+    // Apply dark theme
+    document.documentElement.classList.add('dark');
+  }, []);
+
   return (
-    <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+    <div className="App dark">
+      <AuthProvider>
+        <BrowserRouter>
+          <AppRoutes />
+          <Toaster 
+            position="top-right" 
+            richColors 
+            closeButton
+            toastOptions={{
+              className: 'dark:bg-card dark:text-foreground dark:border-border',
+            }}
+          />
+        </BrowserRouter>
+      </AuthProvider>
     </div>
   );
 }
