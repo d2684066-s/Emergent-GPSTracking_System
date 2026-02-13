@@ -497,12 +497,6 @@ async def get_active_buses():
     
     # No active trips but buses available
     return {"message": "No active bus trips at the moment", "buses": [], "all_out_of_station": False}
-                "driver_name": trip['driver_name'],
-                "location": vehicle.get('current_location'),
-                "is_out_of_station": vehicle.get('is_out_of_station', False)
-            })
-    
-    return {"buses": buses, "all_out_of_station": False}
 
 @public_router.get("/bus/{bus_id}/eta")
 async def get_bus_eta(bus_id: str, user_lat: float, user_lng: float):
