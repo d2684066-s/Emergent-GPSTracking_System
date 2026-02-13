@@ -24,7 +24,7 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('gce_token');
-      window.location.href = '/login';
+      // Don't redirect, let the component handle it
     }
     return Promise.reject(error);
   }
@@ -65,11 +65,38 @@ export const adminApi = {
   getBookings: (params) => api.get('/admin/bookings', { params }),
 };
 
-// Public API calls (for map view)
+// Driver API calls
+export const driverApi = {
+  // Vehicles
+  getAvailableVehicles: (type) => api.get(`/driver/available-vehicles/${type}`),
+  assignVehicle: (id) => api.post(`/driver/assign-vehicle/${id}`),
+  releaseVehicle: (id) => api.post(`/driver/release-vehicle/${id}`),
+  
+  // Trips
+  startTrip: (vehicleId) => api.post('/driver/start-trip', { vehicle_id: vehicleId }),
+  endTrip: (tripId) => api.post(`/driver/end-trip/${tripId}`),
+  getActiveTrip: () => api.get('/driver/active-trip'),
+  getMyTrips: () => api.get('/driver/my-trips'),
+  
+  // Bus
+  markOutOfStation: (vehicleId, isOut) => api.post(`/driver/mark-out-of-station/${vehicleId}`, { is_out_of_station: isOut }),
+  
+  // Ambulance bookings
+  getPendingBookings: () => api.get('/driver/pending-bookings'),
+  acceptBooking: (id) => api.post(`/driver/accept-booking/${id}`),
+  abortBooking: (id) => api.post(`/driver/abort-booking/${id}`),
+  verifyOTP: (bookingId, otp) => api.post('/driver/verify-otp', { booking_id: bookingId, otp }),
+  completeBooking: (id) => api.post(`/driver/complete-booking/${id}`),
+};
+
+// Public API calls
 export const publicApi = {
   getBuses: () => api.get('/public/buses'),
   getBusETA: (busId, lat, lng) => api.get(`/public/bus/${busId}/eta`, { params: { user_lat: lat, user_lng: lng } }),
   getAmbulances: () => api.get('/public/ambulances'),
+  bookAmbulance: (data) => api.post('/public/ambulance/book', data),
+  getBooking: (id) => api.get(`/public/booking/${id}`),
+  getMyBookings: () => api.get('/public/my-bookings'),
 };
 
 // GPS Mock API
