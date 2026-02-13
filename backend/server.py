@@ -459,25 +459,44 @@ async def get_active_buses():
         {"_id": 0}
     ).to_list(100)
     
-    # Check if all buses are out of station
+    # If there are active trips, show those buses
+    if active_trips:
+        buses = []
+        for trip in active_trips:
+            vehicle = await db.vehicles.find_one({"id": trip['vehicle_id']}, {"_id": 0})
+            if vehicle:
+                # If trip is active, bus is NOT out of station - reset flag if needed
+                if vehicle.get('is_out_of_station', False):
+                    await db.vehicles.update_one(
+                        {"id": vehicle['id']},
+                        {"$set": {"is_out_of_station": False}}
+                    )
+                buses.append({
+                    "trip_id": trip['id'],
+                    "vehicle_id": vehicle['id'],
+                    "vehicle_number": vehicle['vehicle_number'],
+                    "driver_name": trip['driver_name'],
+                    "location": vehicle.get('current_location'),
+                    "is_out_of_station": False
+                })
+        return {"buses": buses, "all_out_of_station": False}
+    
+    # No active trips - check if all buses are marked out of station
     vehicles = await db.vehicles.find(
         {"vehicle_type": "bus"},
         {"_id": 0}
     ).to_list(100)
     
-    all_out = all(v.get('is_out_of_station', False) for v in vehicles) if vehicles else True
+    if not vehicles:
+        return {"message": "No buses registered", "buses": [], "all_out_of_station": False}
+    
+    all_out = all(v.get('is_out_of_station', False) for v in vehicles)
     
     if all_out:
         return {"message": "All buses are out of station", "buses": [], "all_out_of_station": True}
     
-    buses = []
-    for trip in active_trips:
-        vehicle = await db.vehicles.find_one({"id": trip['vehicle_id']}, {"_id": 0})
-        if vehicle and not vehicle.get('is_out_of_station', False):
-            buses.append({
-                "trip_id": trip['id'],
-                "vehicle_id": vehicle['id'],
-                "vehicle_number": vehicle['vehicle_number'],
+    # No active trips but buses available
+    return {"message": "No active bus trips at the moment", "buses": [], "all_out_of_station": False}
                 "driver_name": trip['driver_name'],
                 "location": vehicle.get('current_location'),
                 "is_out_of_station": vehicle.get('is_out_of_station', False)
