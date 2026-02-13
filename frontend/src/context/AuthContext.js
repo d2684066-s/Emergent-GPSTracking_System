@@ -33,16 +33,17 @@ export const AuthProvider = ({ children }) => {
     initAuth();
   }, []);
 
-  const login = async (email, password) => {
-    const response = await axios.post(`${API_URL}/api/auth/login`, {
-      email,
-      password
-    });
+  const login = async (credentials, type = 'admin') => {
+    const response = await axios.post(`${API_URL}/api/auth/login`, credentials);
     
     const { access_token, user: userData } = response.data;
     
-    if (userData.role !== 'admin') {
+    if (type === 'admin' && userData.role !== 'admin') {
       throw new Error('Access denied. Admin only.');
+    }
+    
+    if (type === 'driver' && userData.role !== 'driver') {
+      throw new Error('Access denied. Driver only.');
     }
     
     localStorage.setItem('gce_token', access_token);
@@ -50,6 +51,18 @@ export const AuthProvider = ({ children }) => {
     setUser(userData);
     
     return userData;
+  };
+
+  const signup = async (userData) => {
+    const response = await axios.post(`${API_URL}/api/auth/signup`, userData);
+    
+    const { access_token, user: newUser } = response.data;
+    
+    localStorage.setItem('gce_token', access_token);
+    setToken(access_token);
+    setUser(newUser);
+    
+    return newUser;
   };
 
   const logout = () => {
@@ -63,7 +76,7 @@ export const AuthProvider = ({ children }) => {
   });
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, getAuthHeaders }}>
+    <AuthContext.Provider value={{ user, token, loading, login, signup, logout, getAuthHeaders }}>
       {children}
     </AuthContext.Provider>
   );
