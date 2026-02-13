@@ -1,0 +1,170 @@
+{
+  "project_name": "GCE Campus Transportation & Safety System",
+  "design_philosophy": {
+    "persona": "E1 - The Anti-AI Designer",
+    "archetype": "The Performance Pro (Elite Athleticism & Precision)",
+    "core_principles": [
+      "Fusion over Imitation: Mix 'Air Traffic Control' with 'Cyberpunk Logistics'",
+      "Emotion First: Safety = Clarity. Speed = Precision.",
+      "Content is King: Data must be scannable instantly.",
+      "Zoom In: Focus on the vehicle status and location.",
+      "Negative Space: Use it to separate dense data clusters."
+    ],
+    "anti_patterns": [
+      "No purple/teal for CTAs (Use Electric Blue or Signal Red)",
+      "No Inter for Headings (Use Chivo)",
+      "No Center-Everything (Use Asymmetry)",
+      "No Gradient Overload (Use < 20%)"
+    ]
+  },
+  "typography": {
+    "font_family": {
+      "headings": "Chivo, sans-serif",
+      "body": "Inter, sans-serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "scale": {
+      "h1": "text-4xl font-black tracking-tight leading-none",
+      "h2": "text-3xl font-bold tracking-tight",
+      "h3": "text-2xl font-bold tracking-tight",
+      "body": "text-base font-normal leading-relaxed",
+      "small": "text-sm font-medium tracking-wide uppercase text-muted-foreground"
+    },
+    "usage_rules": [
+      "Headings must be Chivo. If Chivo is unavailable, use a strong Grotesque.",
+      "Data values (speed, time, ID) must use JetBrains Mono.",
+      "Labels must be uppercase and tracking-wide."
+    ]
+  },
+  "colors": {
+    "theme": "dark",
+    "palette": {
+      "background": "#09090b",
+      "foreground": "#f8fafc",
+      "card": "#18181b",
+      "card_foreground": "#f8fafc",
+      "popover": "#09090b",
+      "popover_foreground": "#f8fafc",
+      "primary": "#f8fafc",
+      "primary_foreground": "#09090b",
+      "secondary": "#27272a",
+      "secondary_foreground": "#f8fafc",
+      "muted": "#27272a",
+      "muted_foreground": "#a1a1aa",
+      "accent": "#27272a",
+      "accent_foreground": "#f8fafc",
+      "destructive": "#ef4444",
+      "destructive_foreground": "#f8fafc",
+      "border": "#27272a",
+      "input": "#27272a",
+      "ring": "#e2e8f0"
+    },
+    "functional_colors": {
+      "bus_active": "#0ea5e9",
+      "ambulance_alert": "#ef4444",
+      "safe_status": "#22c55e",
+      "warning": "#eab308",
+      "offline": "#71717a"
+    },
+    "gradients": {
+      "glow_blue": "linear-gradient(180deg, rgba(14, 165, 233, 0.15) 0%, rgba(14, 165, 233, 0) 100%)",
+      "glow_red": "linear-gradient(180deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0) 100%)"
+    }
+  },
+  "layout": {
+    "grid_system": "Bento Grid Mode B (High Density)",
+    "spacing": {
+      "container_padding": "p-6 md:p-8 lg:p-12",
+      "gap": "gap-4 md:gap-6",
+      "internal_padding": "p-4 or p-6"
+    },
+    "border_radius": {
+      "default": "rounded-md",
+      "card": "rounded-lg",
+      "button": "rounded-md"
+    },
+    "structure": {
+      "sidebar": "w-64 fixed h-full border-r border-border bg-card/50 backdrop-blur-xl z-50",
+      "main_content": "ml-64 min-h-screen bg-background",
+      "header": "sticky top-0 z-40 w-full border-b border-border bg-background/80 backdrop-blur-md"
+    }
+  },
+  "components": {
+    "cards": {
+      "style": "flat",
+      "border": "1px solid border-border",
+      "shadow": "none",
+      "hover": "border-primary/20 transition-colors duration-200"
+    },
+    "buttons": {
+      "primary": "bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 rounded-md font-medium transition-all active:scale-95",
+      "secondary": "bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-4 py-2 rounded-md font-medium transition-all active:scale-95",
+      "destructive": "bg-destructive text-destructive-foreground hover:bg-destructive/90 h-10 px-4 py-2 rounded-md font-medium transition-all active:scale-95",
+      "ghost": "hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 rounded-md font-medium transition-all active:scale-95"
+    },
+    "inputs": {
+      "style": "bg-background border-input focus:ring-2 focus:ring-ring focus:border-transparent h-10 rounded-md"
+    },
+    "tables": {
+      "style": "w-full caption-bottom text-sm",
+      "header": "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
+      "row": "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
+    },
+    "status_badges": {
+      "active": "bg-green-500/15 text-green-500 border border-green-500/20 px-2 py-0.5 rounded-full text-xs font-medium uppercase tracking-wide",
+      "inactive": "bg-zinc-500/15 text-zinc-400 border border-zinc-500/20 px-2 py-0.5 rounded-full text-xs font-medium uppercase tracking-wide",
+      "alert": "bg-red-500/15 text-red-500 border border-red-500/20 px-2 py-0.5 rounded-full text-xs font-medium uppercase tracking-wide",
+      "warning": "bg-yellow-500/15 text-yellow-500 border border-yellow-500/20 px-2 py-0.5 rounded-full text-xs font-medium uppercase tracking-wide"
+    }
+  },
+  "visual_enhancers": {
+    "glassmorphism": "backdrop-blur-xl bg-background/60 border border-white/10",
+    "neon_glow": "shadow-[0_0_15px_rgba(14,165,233,0.3)]",
+    "grid_background": "bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]",
+    "noise_texture": "opacity-20 pointer-events-none fixed inset-0 z-50 mix-blend-overlay"
+  },
+  "motion": {
+    "library": "framer-motion",
+    "transitions": {
+      "default": "transition-all duration-200 ease-in-out",
+      "page_load": "initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}",
+      "hover_lift": "hover:-translate-y-1 transition-transform duration-200"
+    }
+  },
+  "accessibility": {
+    "contrast": "Ensure 4.5:1 for normal text, 3:1 for large text.",
+    "focus_states": "Visible ring-2 ring-offset-2 ring-ring on all interactive elements.",
+    "aria_labels": "Mandatory for all icon-only buttons.",
+    "reduced_motion": "Respect prefers-reduced-motion media query."
+  },
+  "assets": {
+    "icons": "lucide-react",
+    "images": {
+      "map_placeholder": "https://images.unsplash.com/photo-1563558603156-1e0f5d0592a2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1OTN8MHwxfHNlYXJjaHwxfHxmdXR1cmlzdGljJTIwZGlnaXRhbCUyMG1hcCUyMGludGVyZmFjZXxlbnwwfHx8fDE3NzA5NjQwOTd8MA&ixlib=rb-4.1.0&q=85",
+      "bus_thumbnail": "https://images.unsplash.com/photo-1685645647479-a0232f3fec6d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2ODh8MHwxfHNlYXJjaHwyfHxtb2Rlcm4lMjBzY2hvb2wlMjBidXMlMjBzaWRlJTIwdmlld3xlbnwwfHx8fDE3NzA5NjQxMDN8MA&ixlib=rb-4.1.0&q=85"
+    }
+  },
+  "instructions_to_main_agent": [
+    "1. SETUP: Install 'lucide-react', 'recharts', 'framer-motion', 'clsx', 'tailwind-merge' if not present.",
+    "2. THEME: Ensure 'dark' class is applied to the html/body tag by default.",
+    "3. LAYOUT: Use the 'SidebarLayout' component pattern for all admin pages.",
+    "4. MAPS: Use 'react-map-gl' or a placeholder div with the map image if API key is missing. Overlay vehicle markers using absolute positioning.",
+    "5. TABLES: Use Shadcn Table component. Implement search and filter in a toolbar above the table.",
+    "6. FORMS: Use Shadcn Form/Input/Select components. Validate using Zod.",
+    "7. DASHBOARD: Use the Bento Grid layout. Create 'StatCard' components for the top row.",
+    "8. OFFENCES: Use a 'DataTable' with a 'StatusBadge' column for severity.",
+    "9. TESTING: Add 'data-testid' to all interactive elements (buttons, inputs, links)."
+  ],
+  "universal_guidelines": [
+    "Avoid 'AI slop' aesthetic (generic centered layouts, uniform styling).",
+    "Create depth through layered design elements with z-index hierarchy.",
+    "Use glass-morphism effects with backdrop filters (12-24px blur).",
+    "Do NOT apply universal transition (e.g., transition: all).",
+    "Do NOT center align the app container.",
+    "Always use modern button styles (pill-shaped or sharp).",
+    "NEVER use AI assistant Emoji characters.",
+    "Every interaction needs micro-animations.",
+    "Use 2-3x more spacing than feels comfortable.",
+    "Subtle grain textures and noise overlays are recommended."
+  ]
+}
